@@ -22,7 +22,7 @@
 
 需要理解的命令行工具：
 
-gcc，make，arm-buildroot-linux-gnueabihf-gcc，gdb，cmake，objdump，fdisk，dmesg，mkfs
+gcc，make，arm-buildroot-linux-gnueabihf-gcc，gdb，cmake，objdump，fdisk，dmesg，mkfs, systemctl
 
 ------------
 
@@ -78,7 +78,17 @@ example：
 
 1:网线连接：使用ifconfig分别为linux有线网口，板子有线网口设置同一网段的ip地址
 
-ip address：11192.168.1.100
+ip address：192.168.1.100
+
+
+
+方法1：soc + linux ：串口连接，使用静态路由：把网口的IP固定
+
+
+
+方法2:soc+路由器+linux：可以使用有线或者无线连接，路由器开启DHCP
+
+
 
 linux端使用ssh则可以直接访问
 
@@ -96,9 +106,34 @@ chmod 666 /dev/ttyUSB0     //暂时打开权限
 
 
 
+
+
+### 开启NFS
+
+linux安装nfs，把某目录配置为nfs，然后使用soc将该目录挂载到自己的目录中进行访问
+
+~~~linux
+
+1.先确定设备之间可以连通
+2.sudo apt-get install nfs-kernel-server
+3. sudo mkdir /home/myshare
+4.sudo vim /etc/exports
+5./home/myshare  *(rw,sync,no_subtree_check)
+6.sudo systemctl restart nfs-kernel-server
+
+soc：
+sudo mount ip:/home/myshare /mnt/location
+~~~
+
+
+
+
+
+
+
 ### 使用SDK配置，启动SOC
 
-一个嵌入式SDK包含：交叉编译工具链，操作手册，源代码（库和头文件），调试烧录工具/脚本
+一个嵌入式SDK包含：交叉编译工具链，操作手册，源代码（库和头文件），调试烧录工具/脚本，内核
 
 1.安装编译环境(shell)
 
@@ -108,24 +143,92 @@ chmod 666 /dev/ttyUSB0     //暂时打开权限
 
 2.解压，按照makefile编译生成镜像/内核/其他程序
 
+（detail如下）
+
 
 
 3.烧写到sd卡中，soc使用sd卡启动板子
-
-case one：全新的sd卡
 
 ~~~linux
 lsblk  //查看挂载情况，找到sdx
 blkid  //检查sd卡文件类型
 fdisk dev/sdx //进行分区
-mkfs ext4 /dev/sdx   //对分区进行格式化
+mkfs ext4 /dev/sdx   //格式化
 mount /dev/sdx /xxpath  //挂载
-//
-可以直接分区再格式化
+
+
 ~~~
 
-
+case one：全新的sd卡
 
 case two：已经有内容
 
 先格式化再分区
+
+
+
+
+
+**编译内核**
+
+1.配置编译内核 （顺便dtb，driver module ---》 dtb /lib）
+
+基于makefile：
+
+配置      make config  /// make menuconfig    配置完成后会生成.config文件
+
+> 驱动程序中头文件来自于内核，依赖于内核源码，要进行内核配置，然后编译内核。驱动和内核是配套的。
+
+编译：
+
+make  / make all（全编译）
+
+make clean
+
+make install
+
+make <target>  // 快速编译
+
+make <module>
+
+make -j4 //多核心运行
+
+2，移植到板子上 
+
+~~~linux
+cp /mnt/ZImage /boot  //zImage是编译出来的内核
+cp /mnt/xx.dtb /boot  //更新设备树
+cp /mnt/lib/modules /lib -rfd //更新模块   （覆盖目录）
+sync 
+reboot
+
+//驱动程序
+更改makefile的内核路径
+然后： insmod xxxx.ko
+
+~~~
+
+
+
+3.编译测试驱动程序
+
+
+
+
+
+question
+
+1.编译后生成 内核img， dtb，lib
+
+而/boot下的文档有efi，grub，各种版本内核。
+
+如何实现内核切换？vmlinuz是什么？
+
+case 1:把dtb和img换到/boot下
+
+case：个人电脑什么逻辑呢？
+
+
+
+
+
