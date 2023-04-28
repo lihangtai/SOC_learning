@@ -37,6 +37,7 @@ gcc，make，交叉编译gcc，gdb，cmake，objdump，fdisk，dmesg，mkfs, sys
   4.glibc库的了解使用（使用man 3查询手册）
 
 5. 多线程
+5. 板级通信，板间通信
 
 
 
@@ -78,6 +79,7 @@ Note：串口：UART，RS-232   /dev是一个虚拟文件系统，用于访问�
 2.
 chmod 666 /dev/ttyUSB0     //暂时打开权限
 
+使用serial连接
 ~~~
 
 
@@ -151,7 +153,7 @@ case two：已经有内容
 
 基于makefile：
 
-配置      make config  /// make menuconfig    配置完成后会生成.config文件
+配置      make config  // make menuconfig    配置完成后会生成.config文件
 
 > 驱动程序中头文件来自于内核，依赖于内核源码，要进行内核配置，然后编译内核。驱动和内核是配套的。
 
@@ -273,7 +275,7 @@ ex：make -C /a -f $(TOPDIR)/Makefile.build   (makefile.build是子目录的make
 
 ## 文件
 
-文件（linux中一切且文件，普通文件读写磁盘（也调用驱动），设备调用驱动
+文件（linux中一切且文件，普通文件读写磁盘（也调用驱动），字符设备调用驱动
 
 1.挂载各种sd卡，硬盘，flash，u盘。访问硬件上的各种真实普通文件
 
@@ -363,6 +365,7 @@ if(fd_fb <0){
 }
 static struct fb_var_screeninfo var;   //可变信息用一个定制的结构体来接收 ：bpp，分辨率。。。
 
+//ioctl函数也是标准库函数
 if(ioctl(fd_fb, FBIOGET_VSCREENINFO,&var)){
   
   printf("can't get var\n");
