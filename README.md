@@ -363,15 +363,18 @@ cat /proc/devices  查看已经支持的设备有哪些，
 
 module_init(xxx)
 //把xxx作为驱动的入口函数注册：把刚写的驱动结构体放到字符结构体数组中
+
+
+具体流程可以查看：https://www.bilibili.com/video/BV1Yb4y1t7Uj?p=5&vd_source=8c2c0205fb00c73b1b17ce2d2925d1de
 ```
 
 ![1](./image/1.jpeg)
 
-![1](/Users/mac/Desktop/CS/SOC_learning/2.png)
+![1](./image/2.png)
 
 
 
-
+![1](./image/3.png)
 
 case 1:对于文件，都可以用标准的接口去访问他们 （open/read/write） 使用man 命令去查找具体的使用方法 
 
