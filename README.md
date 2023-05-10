@@ -22,7 +22,7 @@
 
 可能需要理解的知识：
 
-1.命令行工具的使用：gcc，make，交叉编译gcc，gdb，cmake，objdump，fdisk，dmesg，mkfs, systemctl，inxi...
+1.命令行工具的使用：gcc，make，交叉编译gcc，gdb，cmake，objdump，fdisk，dmesg，mkfs, systemctl，inxi, mesg...
 
 
 
@@ -54,7 +54,9 @@
 
 ------------
 
+linux中第一个启动的进程是init/systemd，systemd是linux中用于管理系统服务和进程的框架/守护进程（后台运行：用户态），以并行的方式启动它们，还提供了系统日志，用户管理，权限管理，网络，文件挂载等。
 
+ststemctl是操作systemd的命令行工具
 
 
 
@@ -68,23 +70,41 @@
 
 #### 1:网线连接：使用ifconfig分别为linux有线网口，板子有线网口设置同一网段的ip地址
 
-ip address：192.168.1.100
+ip address：192.168.1.200
+
+soc：192.168.1.100
+
+soc 直接连接 linux主机 ：网线连接，使用静态路由：把网口的IP固定
+
+>通过ifconfig eth0 192.168.1.100 netmask 255.255.255.0 up 进行配置只能暂时生效
 
 
 
-方法1：soc 直接连接 linux主机 ：网线连接，使用静态路由：把网口的IP固定
+ubuntu端：/etc/network/interface已经没有使用，而是通过/etc/netplan进行配置
 
-修改配置文件
-
-sudo systemctl restart networking
+配置后，sudo netplan apply生效
 
 
 
-方法2:soc+路由器+linux：可以使用有线或者无线连接，路由器开启DHCP
+
+
+soc端：没有/etc/network/interface，没有/etc/netplan
+
+使用
+
+ip addr add 192.168.1.200/24 dev eth0 进行配置
 
 
 
-linux端使用ssh则可以直接访问
+> :soc+路由器+linux：可以使用有线或者无线连接，路由器开启DHCP
+>
+> linux端使用ssh则可以直接访问
+
+
+
+
+
+
 
 
 
@@ -518,3 +538,10 @@ Socket是一个编程接口，不是一个网络协议，因此它并不位于TC
 
 
 
+
+
+
+
+任何一个驱动程序，入口函数都是init_module,出口函数都是cleanup_module
+
+换名字需用用宏来定义一下。atrribute（alias xxx）
