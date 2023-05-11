@@ -2,7 +2,7 @@
 
 >设备：linux主机，飞凌MX8 SOC
 >
->实现：使用sdk中的交叉编译工具链，在linux主机上编译简单驱动程序为.ko模块，linux主机通过nfs在局域网中共享目录/home/jerry/Desktop/share，在MX8中成功挂载模块
+>实现：使用sdk中的交叉编译工具链，在linux主机上编译简单驱动程序为.ko模块，linux主机通过nfs在局域网中共享目录/home/jerry/Desktop/share，在MX8中挂载文件系统后，运行并成功挂载模块
 
 
 
@@ -138,3 +138,47 @@ struct _IO_FILE {
 >rmmod
 >
 >dmesg
+
+
+
+# Project 2
+
+>设备：linux主机
+>
+>实现：创建字符类型设备节点，并为其开发驱动函数，了解了字符驱动程序的大致开发框架
+>
+>上一环节驱动程序的进阶版
+
+## 逻辑
+
+应用层使用glibc库函数操作设备 （触发中断进入内核态）
+
+根据文件类型（字符/块）并根据主设备号寻找到合适的类型驱动程序
+
+驱动执行对应应用层的驱动函数：write()  -> kernel_write()
+
+
+
+## 过程
+
+驱动程序申请主设备号：
+
+>目前主机已经使用的主设备号 
+>
+>cat /proc/devices
+>
+>如果register注册时，申请为0，则是请内核主动分配
+
+编译，挂载，卸载模块
+
+>lsmod
+>
+>insmod
+>
+>rmmod
+>
+>Make >makefile中含有make，是调用内核中的makefile
+
+设备节点与驱动对应
+
+>sudo mknod name type 主设备号 次设备号

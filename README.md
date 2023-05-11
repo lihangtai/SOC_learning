@@ -540,8 +540,117 @@ Socket是一个编程接口，不是一个网络协议，因此它并不位于TC
 
 
 
+## 内核模块
+
+> 可以直接编进内核，或者需要时用insmod加载
+>
+> 编进内核：假如驱动出现问题，只能debug整个内核重新编译
+>
+> 动态加载：只需要改ko，（内核轻量化，启动快）
+>
+> 
+>
+> 内核驱动模块的开发遵循一定的框架和原则
+>
+> 1.入口函数，出口函数。内核模块加载器会执行固定操作
+>
+> 2.内存管理：kmalloc(),kfree()
+>
+> 3.一些函数发生变化：应用层printf(), 内核 printk  -》存放在内核的一个buffer中
 
 
-任何一个驱动程序，入口函数都是init_module,出口函数都是cleanup_module
 
-换名字需用用宏来定义一下。atrribute（alias xxx）
+~~~linux
+/hello目录下
+
+hello.c 最简单的驱动程序
+
+#include<linux/module.h>
+
+static int __init hello_init(void){     ///__init 是宏	只用一次，运行后可在内存中释放
+return 0;
+}
+
+static void __exit hello_exit(void){
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+MODULE_LICENSE("GPL");
+
+
+Makefile:
+
+obj-m += hello.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+	
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+//
+在makefile中还有make，因为是需要调用指定内核（或者不同的工具链）的makefile，使用一些配置选项
+obj-m :告诉需要编译成模块的源文件是hello.o
+~~~
+
+
+
+#### 应用层+驱动层开发逻辑
+
+（glibc的标准函数操作文件/设备结点 -》类型 -〉对应的驱动（主设备号）
+
+1.确定空闲的主设备号（cat /proc/devices） 
+
+> cat /proc/devices  //查看已经被使用的主设备号
+
+2.入口函数在相应类型的驱动数组/链表中注册（如字符设备在字符类型驱动数组中注册）
+
+>register_chrdev(主设备号，驱动name，驱动实现结构体/句柄)
+>
+>register中申请设备号输入为0时，表示让内核自动分配，非负整数则自己指定
+>
+>不使用时，也记得卸载
+
+3.编写子系统结构体（函数指针）的实现
+
+> Ex file_operations
+>
+> Static struct file_operations hello{
+>
+> .owner = THIS_MOUDLE,
+>
+> .read = hello_read,
+>
+> .write = hello_write,
+>
+> };
+>
+> 应用层 open，write，read，当驱动中file_operation没有实现对应的驱动函数逻辑的时候，可以open，但无法read write
+>
+> 内核中copy_to_user()可以把驱动中的值返回给应用层
+>
+> copy_from_user();  
+
+
+
+4.编写应用层程序
+
+>fd = open("/dev/xtz"....)
+>
+>Write()
+>
+>应用层 ./xxx -r/-w  一个c的可执行文件，加上参数，可以加入path形成命令行工具
+>
+>如果不是真实的设备结点，可以创建一个
+>
+>mknod [name] [type] [主设备号] [次设备号]
+>
+>rm 
+
+
+
+
+
+
+
